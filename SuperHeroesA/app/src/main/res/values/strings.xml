@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">SuperHeroesA</string>
+    <string name="hero1">Iron Man</string>
+    <string name="description1">Inteligentisimo</string>
+    <string name="hero2">batman</string>
+    <string name="description2">EL buen muercialogo</string>
+    <string name="hero3">Megatron</string>
+    <string name="description3">Chico metalico</string>
+    <string name="hero4">Chapulin colorado</string>
+    <string name="description4">No contaban con mi astucia</string>
+    <string name="hero5">Kaliman</string>
+    <string name="description5">El que controla la mente</string>
+    <string name="hero6">Frda Khalo</string>
+    <string name="description6">La pintora asesina</string>
+</resources>

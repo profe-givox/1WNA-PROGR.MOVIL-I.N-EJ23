@@ -1,0 +1,150 @@
+Index: app/src/main/java/com/example/android/unscramble/ui/GameUiState.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>/*\r\n * Copyright (c)2022 The Android Open Source Project\r\n *\r\n * Licensed under the Apache License, Version 2.0 (the \"License\");\r\n * you may not use this file except in compliance with the License.\r\n * You may obtain a copy of the License at\r\n *\r\n *      https://www.apache.org/licenses/LICENSE-2.0\r\n *\r\n * Unless required by applicable law or agreed to in writing, software\r\n * distributed under the License is distributed on an \"AS IS\" BASIS,\r\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\r\n * See the License for the specific language governing permissions and\r\n * limitations under the License.\r\n */\r\npackage com.example.android.unscramble.ui\r\n\r\n/**\r\n * Data class that represents the game UI state\r\n */\r\ndata class GameUiState(\r\n    val currentScrambledWord: String = \"\",\r\n    val currentWordCount: Int = 1,\r\n    val score: Int = 0,\r\n    val isGuessedWordWrong: Boolean = false,\r\n    val isGameOver: Boolean = false\r\n)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/android/unscramble/ui/GameUiState.kt b/app/src/main/java/com/example/android/unscramble/ui/GameUiState.kt
+--- a/app/src/main/java/com/example/android/unscramble/ui/GameUiState.kt	(revision 9dfe394b4389f0aa82e5494526505ee82bec9e24)
++++ b/app/src/main/java/com/example/android/unscramble/ui/GameUiState.kt	(date 1681840025394)
+@@ -24,4 +24,5 @@
+     val score: Int = 0,
+     val isGuessedWordWrong: Boolean = false,
+     val isGameOver: Boolean = false
++
+ )
+Index: app/src/main/java/com/example/android/unscramble/ui/GameViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>/*\r\n * Copyright (c)2022 The Android Open Source Project\r\n *\r\n * Licensed under the Apache License, Version 2.0 (the \"License\");\r\n * you may not use this file except in compliance with the License.\r\n * You may obtain a copy of the License at\r\n *\r\n *      https://www.apache.org/licenses/LICENSE-2.0\r\n *\r\n * Unless required by applicable law or agreed to in writing, software\r\n * distributed under the License is distributed on an \"AS IS\" BASIS,\r\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\r\n * See the License for the specific language governing permissions and\r\n * limitations under the License.\r\n */\r\n\r\npackage com.example.android.unscramble.ui\r\n\r\nimport androidx.compose.runtime.getValue\r\nimport androidx.compose.runtime.mutableStateOf\r\nimport androidx.compose.runtime.setValue\r\nimport androidx.lifecycle.ViewModel\r\nimport com.example.android.unscramble.data.MAX_NO_OF_WORDS\r\nimport com.example.android.unscramble.data.SCORE_INCREASE\r\nimport com.example.android.unscramble.data.allWords\r\nimport kotlinx.coroutines.flow.MutableStateFlow\r\nimport kotlinx.coroutines.flow.StateFlow\r\nimport kotlinx.coroutines.flow.asStateFlow\r\nimport kotlinx.coroutines.flow.update\r\n\r\n/**\r\n * ViewModel containing the app data and methods to process the data\r\n */\r\nclass GameViewModel : ViewModel() {\r\n\r\n    // Game UI state\r\n    private val _uiState = MutableStateFlow(GameUiState())\r\n    val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()\r\n\r\n    var userGuess by mutableStateOf(\"\")\r\n        private set\r\n\r\n    // Set of words used in the game\r\n    private var usedWords: MutableSet<String> = mutableSetOf()\r\n    private lateinit var currentWord: String\r\n\r\n    init {\r\n        resetGame()\r\n    }\r\n\r\n    /*\r\n     * Re-initializes the game data to restart the game.\r\n     */\r\n    fun resetGame() {\r\n        usedWords.clear()\r\n        _uiState.value = GameUiState(currentScrambledWord = pickRandomWordAndShuffle())\r\n    }\r\n\r\n    /*\r\n     * Update the user's guess\r\n     */\r\n    fun updateUserGuess(guessedWord: String){\r\n        userGuess = guessedWord\r\n    }\r\n\r\n    /*\r\n     * Checks if the user's guess is correct.\r\n     * Increases the score accordingly.\r\n     */\r\n    fun checkUserGuess() {\r\n        if (userGuess.equals(currentWord, ignoreCase = true)) {\r\n            // User's guess is correct, increase the score\r\n            // and call updateGameState() to prepare the game for next round\r\n            val updatedScore = _uiState.value.score.plus(SCORE_INCREASE)\r\n            updateGameState(updatedScore)\r\n        } else {\r\n            // User's guess is wrong, show an error\r\n            _uiState.update { currentState ->\r\n                currentState.copy(isGuessedWordWrong = true)\r\n            }\r\n        }\r\n        // Reset user guess\r\n        updateUserGuess(\"\")\r\n    }\r\n\r\n    /*\r\n     * Skip to next word\r\n     */\r\n    fun skipWord() {\r\n        updateGameState(_uiState.value.score)\r\n        // Reset user guess\r\n        updateUserGuess(\"\")\r\n    }\r\n\r\n    /*\r\n     * Picks a new currentWord and currentScrambledWord and updates UiState according to\r\n     * current game state.\r\n     */\r\n    private fun updateGameState(updatedScore: Int) {\r\n        if (usedWords.size == MAX_NO_OF_WORDS){\r\n            //Last round in the game, update isGameOver to true, don't pick a new word\r\n            _uiState.update { currentState ->\r\n                currentState.copy(\r\n                    isGuessedWordWrong = false,\r\n                    score = updatedScore,\r\n                    isGameOver = true\r\n                )\r\n            }\r\n        } else{\r\n            // Normal round in the game\r\n            _uiState.update { currentState ->\r\n                currentState.copy(\r\n                    isGuessedWordWrong = false,\r\n                    currentScrambledWord = pickRandomWordAndShuffle(),\r\n                    currentWordCount = currentState.currentWordCount.inc(),\r\n                    score = updatedScore\r\n                )\r\n            }\r\n        }\r\n    }\r\n\r\n    private fun shuffleCurrentWord(word: String): String {\r\n        val tempWord = word.toCharArray()\r\n        // Scramble the word\r\n        tempWord.shuffle()\r\n        while (String(tempWord).equals(word)) {\r\n            tempWord.shuffle()\r\n        }\r\n        return String(tempWord)\r\n    }\r\n\r\n    private fun pickRandomWordAndShuffle(): String {\r\n        // Continue picking up a new random word until you get one that hasn't been used before\r\n        currentWord = allWords.random()\r\n        if (usedWords.contains(currentWord)) {\r\n            return pickRandomWordAndShuffle()\r\n        } else {\r\n            usedWords.add(currentWord)\r\n            return shuffleCurrentWord(currentWord)\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/android/unscramble/ui/GameViewModel.kt b/app/src/main/java/com/example/android/unscramble/ui/GameViewModel.kt
+--- a/app/src/main/java/com/example/android/unscramble/ui/GameViewModel.kt	(revision 9dfe394b4389f0aa82e5494526505ee82bec9e24)
++++ b/app/src/main/java/com/example/android/unscramble/ui/GameViewModel.kt	(date 1681839941202)
+@@ -48,10 +48,13 @@
+         resetGame()
+     }
+ 
++
++
++
+     /*
+      * Re-initializes the game data to restart the game.
+      */
+-    fun resetGame() {
++       fun resetGame() {
+         usedWords.clear()
+         _uiState.value = GameUiState(currentScrambledWord = pickRandomWordAndShuffle())
+     }
+@@ -63,6 +66,7 @@
+         userGuess = guessedWord
+     }
+ 
++
+     /*
+      * Checks if the user's guess is correct.
+      * Increases the score accordingly.
+Index: .gitignore
+===================================================================
+diff --git a/.gitignore b/.gitignore
+deleted file mode 100644
+--- a/.gitignore	(revision 9dfe394b4389f0aa82e5494526505ee82bec9e24)
++++ /dev/null	(revision 9dfe394b4389f0aa82e5494526505ee82bec9e24)
+@@ -1,36 +0,0 @@
+-# built application files
+-*.apk
+-*.ap_
+-
+-# Mac files
+-.DS_Store
+-
+-# files for the dex VM
+-*.dex
+-
+-# Java class files
+-*.class
+-
+-# generated files
+-bin/
+-gen/
+-
+-# Ignore gradle files
+-.gradle/
+-build/
+-
+-# Local configuration file (sdk path, etc)
+-local.properties
+-
+-# Proguard folder generated by Eclipse
+-proguard/
+-proguard-project.txt
+-
+-# Eclipse files
+-.project
+-.classpath
+-.settings/
+-
+-# Android Studio/IDEA
+-*.iml
+-.idea
+\ No newline at end of file
+Index: .github/ISSUE_TEMPLATE/android-basics--viewmodel-and-state-in-compose.md
+===================================================================
+diff --git a/.github/ISSUE_TEMPLATE/android-basics--viewmodel-and-state-in-compose.md b/.github/ISSUE_TEMPLATE/android-basics--viewmodel-and-state-in-compose.md
+deleted file mode 100644
+--- a/.github/ISSUE_TEMPLATE/android-basics--viewmodel-and-state-in-compose.md	(revision 9dfe394b4389f0aa82e5494526505ee82bec9e24)
++++ /dev/null	(revision 9dfe394b4389f0aa82e5494526505ee82bec9e24)
+@@ -1,32 +0,0 @@
+----
+-name: 'Android Basics: Viewmodel and State in Compose'
+-about: Create a report to help us improve
+-title: 'Android Basics: Viewmodel and State in Compose'
+-labels: ''
+-assignees: ''
+-
+----
+-
+-**URL of codelab**
+-
+-
+-**In which task and step of the codelab can this issue be found?**
+-
+-
+-**Describe the problem**
+-
+-
+-
+-
+-**Steps to reproduce?**
+-1. Go to...
+-2. Click on...
+-3. See error...
+-
+-**Versions**
+-_Android Studio version:_ 
+-_API version of the emulator:_ 
+-
+-
+-**Additional information**
+-_Include screenshots if they would be useful in clarifying the problem._
+Index: local.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>ISO-8859-1
+===================================================================
+diff --git a/local.properties b/local.properties
+new file mode 100644
+--- /dev/null	(date 1681839120767)
++++ b/local.properties	(date 1681839120767)
+@@ -0,0 +1,8 @@
++## This file must *NOT* be checked into Version Control Systems,
++# as it contains information specific to your local configuration.
++#
++# Location of the SDK. This is only used by Gradle.
++# For customization when using a Version Control System, please read the
++# header note.
++#Tue Apr 18 12:32:00 CDT 2023
++sdk.dir=C\:\\Users\\gusbe\\AppData\\Local\\Android\\Sdk

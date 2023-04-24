@@ -100,13 +100,20 @@ fun CupcakeApp(modifier: Modifier = Modifier,
         ){
             //pantalla de inicio
             composable(route = CupcakeScreen.Start.name){
-                StartOrderScreen(quantityOptions = quantityOptions)
+                StartOrderScreen(quantityOptions = quantityOptions,onNextButtonClicked =
+                {viewModel.setQuantity(it)
+                    navController.navigate(CupcakeScreen.Flavor.name)
+                }
+                )
             }
-            //Ruta de pantalla de sabores
+                //Ruta de pantalla de sabores
             composable(route = CupcakeScreen.Flavor.name) {
                 val context = LocalContext.current
                 SelectOptionScreen(
                     subtotal = uiState.price,
+                    onNextButtonClicked = {
+                        navController.navigate(CupcakeScreen.Pickup.name) },
+                    onCancelButtonClicked = {},
                     options = flavors.map { id -> context.resources.getString(id) },
                     onSelectionChanged = { viewModel.setFlavor(it) }
                 )
@@ -115,6 +122,10 @@ fun CupcakeApp(modifier: Modifier = Modifier,
             composable(route = CupcakeScreen.Pickup.name) {
                 SelectOptionScreen(
                     subtotal = uiState.price,
+                    onNextButtonClicked = {
+                        navController.navigate(CupcakeScreen.Summary.name)
+                    },
+                    onCancelButtonClicked = {},
                     options = uiState.pickupOptions,
                     onSelectionChanged = { viewModel.setDate(it) }
                 )

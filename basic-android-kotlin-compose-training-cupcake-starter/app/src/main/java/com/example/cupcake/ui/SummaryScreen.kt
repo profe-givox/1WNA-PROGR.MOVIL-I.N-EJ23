@@ -103,10 +103,13 @@ fun OrderSummaryScreen(
     }
 }
 
-@Preview
+/*@Preview
 @Composable
 fun OrderSummaryPreview(){
     OrderSummaryScreen(
-        orderUiState = OrderUiState(0, "Test", "Test", "$300.00"),
+        orderUiState = OrderUiState(0, "Test", "Test", "$300.00"), onCancelButtonClicked = {
+
+        }
+
     )
-}
+}*/

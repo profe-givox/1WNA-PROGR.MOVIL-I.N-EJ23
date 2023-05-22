@@ -54,5 +54,15 @@ class ItemEditViewModel(
 
     }
 
+    fun updateUiState(newItemUiState: ItemUiState) {
+        itemUiState = newItemUiState.copy( actionEnabled = newItemUiState.isValid())
+    }
+
+    suspend fun updateItem() {
+        if (itemUiState.isValid()) {
+            itemsRepository.updateItem(itemUiState.toItem())
+        }
+    }
+
 
 }
